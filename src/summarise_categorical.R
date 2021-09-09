@@ -7,7 +7,6 @@
 #
 #**************************************************************************
 
-
 summarise_categorical = function(df, var, group_var, set_name) {
   # Summarise categorical variables for the baseline characteristics table
   # 
