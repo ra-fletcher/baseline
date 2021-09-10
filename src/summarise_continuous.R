@@ -7,7 +7,7 @@
 #
 #**************************************************************************
 
-summarise_numeric = function(df, var, group_var, set_name){
+summarise_continuous = function(df, var, group_var, set_name) {
   # Summarise normally-distributed continuous variables for the baseline 
   # characteristics table
   # 
@@ -41,5 +41,3 @@ summarise_numeric = function(df, var, group_var, set_name){
     ) %>% 
     rename(Characteristic = name)
 }
-
-
