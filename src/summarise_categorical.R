@@ -1,14 +1,14 @@
 #**************************************************************************
 #
 # Project: Functions for creating baseline characteristics tables
-# Date:    09-Sep-2021
+# Date:    13-Sep-2021
 # Author:  Rob Fletcher
 # Purpose: Summarise categorical variables
 #
 #**************************************************************************
 
-summarise_categorical = function(df, var, group_var, set_name) {
-  # Summarise categorical variables for the baseline characteristics table
+summarise_categorical = function(df, summary_var, group_var, set_name) {
+  # Summarise categorical variables for baseline characteristics tables
   # 
   # Parameters
   # ----------
@@ -23,9 +23,9 @@ summarise_categorical = function(df, var, group_var, set_name) {
   
   summary = df %>%
     group_by({{ group_var }}) %>%
-    group_by({{ group_var }}, {{ var }}) %>%
+    group_by({{ group_var }}, {{ summary_var }}) %>%
     summarise(N = n(), .groups = "keep") %>%
-    group_by({{ group_var }}, is.na({{ var }})) %>%
+    group_by({{ group_var }}, is.na({{ summary_var }})) %>%
     mutate(s1 = sum(N)) %>%
     group_by({{ group_var }}) %>%
     mutate(s2 = sum(N)) %>%
@@ -33,21 +33,21 @@ summarise_categorical = function(df, var, group_var, set_name) {
       value = sprintf("%d (%0.1f)", N, 100 * N / sum(N)),
       value = str_replace(value, "[)]$", "%)")
     ) %>%
-    filter(!is.na({{ var }})) %>%
-    select({{ group_var }}, {{ var }}, value) %>%
-    pivot_longer(cols = !c({{ group_var }}, {{ var }})) %>%
+    filter(!is.na({{ summary_var }})) %>%
+    select({{ group_var }}, {{ summary_var }}, value) %>%
+    pivot_longer(cols = !c({{ group_var }}, {{ summary_var }})) %>%
     pivot_wider(names_from = {{ group_var }}) %>%
     mutate(
       across(c(`0`, `1`), ~ if_else(is.na(.), "0 (0.0%)", .)),
       `P-value` = chisq.test(
         table(
           df %>% pull({{ group_var }}),
-          df %>% pull({{ var }})
+          df %>% pull({{ summary_var }})
         )
       )$p.value,
       across(where(is.double), ~ round(., digits = 3)),
       `P-value` = if_else(`P-value` < 0.001, "<0.001", as.character(`P-value`)),
-      Characteristic = str_replace_all({{ var }}, "_", " "),
+      Characteristic = str_replace_all({{ summary_var }}, "_", " "),
       Characteristic = str_to_sentence(Characteristic),
       Characteristic = str_c("   ", Characteristic)
     ) %>%
