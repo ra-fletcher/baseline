@@ -1,8 +1,8 @@
 #*******************************************************************************
 #
 # Project: Functions for creating baseline characteristics tables
-# Date:    13-Sep-2021
-# Author:  Rob Fletcher
+# Date:    17-Sep-2021
+# Author:  Rob Fletcher, Tom Matcham
 # Purpose: Summarise continuous variables
 #
 #*******************************************************************************
