@@ -22,7 +22,7 @@ summarise_categorical = function(df,
   # group_var : variable to group by
   # decimals : integer (number of decimal places to round numbers)
   # include_missing : boolean (whether individuals with missing values should be 
-  #                           included)
+  #                            included)
   # set_name : character string (how characteristic is printed in the table)
   #
   # Returns

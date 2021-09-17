@@ -2,7 +2,7 @@
 #
 # Project: Functions for creating baseline characteristics tables
 # Date:    17-Sep-2021
-# Author:  Rob Fletcher, Tom Matcham
+# Authors: Rob Fletcher, Tom Matcham
 # Purpose: Summarise continuous variables
 #
 #*******************************************************************************
@@ -22,8 +22,8 @@ summarise_continuous = function(df,
   # group_var : variable to group by
   # decimals : integer (number of decimal places to round numbers)
   # normally_distributed : boolean (whether summary_var is normally distributed 
-  #                                or not, decides whether mean/SD with T-test 
-  #                                or median/IQR with Wilcoxon are printed)
+  #                                 or not, decides whether mean/SD with T-test 
+  #                                 or median/IQR with Wilcoxon are printed)
   # set_name : character string (how characteristic is printed in the table)
   #
   # Returns
