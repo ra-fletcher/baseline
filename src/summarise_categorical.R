@@ -1,13 +1,18 @@
-#**************************************************************************
+#*******************************************************************************
 #
 # Project: Functions for creating baseline characteristics tables
 # Date:    13-Sep-2021
 # Author:  Rob Fletcher
 # Purpose: Summarise categorical variables
 #
-#**************************************************************************
+#*******************************************************************************
 
-summarise_categorical = function(df, summary_var, group_var, set_name) {
+summarise_categorical = function(df, 
+                                 summary_var, 
+                                 group_var,
+                                 decimals = 1,
+                                 include_missing = TRUE,
+                                 set_name) {
   # Summarise categorical variables for baseline characteristics tables
   # 
   # Parameters
@@ -15,24 +20,63 @@ summarise_categorical = function(df, summary_var, group_var, set_name) {
   # df : tibble
   # summary_var : variable to summarise
   # group_var : variable to group by
+  # decimals : integer (number of decimal places to round numbers)
+  # include_missing : boolean (whether individuals with missing values should be 
+  #                           included)
   # set_name : character string (how characteristic is printed in the table)
   #
   # Returns
   # -------
   # tibble
   
-  summary = df %>%
-    group_by({{ group_var }}) %>%
-    group_by({{ group_var }}, {{ summary_var }}) %>%
-    summarise(N = n(), .groups = "keep") %>%
-    group_by({{ group_var }}, is.na({{ summary_var }})) %>%
-    mutate(s1 = sum(N)) %>%
-    group_by({{ group_var }}) %>%
-    mutate(s2 = sum(N)) %>%
-    mutate(
-      value = sprintf("%d (%0.1f)", N, 100 * N / sum(N)),
-      value = str_replace(value, "[)]$", "%)")
-    ) %>%
+  # Function to correctly round numbers (`round()` function in R works weirdly)
+  round_correctly = function(x, n) {
+    pos_neg = sign(x)
+    y = abs(x) * 10^n
+    y = y + 0.5 + sqrt(.Machine$double.eps)
+    y = trunc(y)
+    y = y / 10^n
+    return(y * pos_neg)
+  }
+  
+  # Calculation which INCLUDES individuals with missing values in the percentage
+  # value
+  if(include_missing == TRUE) {
+    
+    calculation = df %>%
+      group_by({{ group_var }}) %>%
+      group_by({{ group_var }}, {{ summary_var }}) %>%
+      summarise(n = n(), .groups = "keep") %>%
+      group_by({{ group_var }}, is.na({{ summary_var }})) %>%
+      group_by({{ group_var }}) %>%
+      mutate(
+        perc = 100 * n / sum(n),
+        across(where(is.double), ~ round_correctly(., {{ decimals }})),
+        value = paste0(n, " (", perc, "%)")
+      )
+    
+  }
+  
+  # Calculation which EXCLUDES individuals with missing values in the percentage
+  # value
+  if(include_missing == FALSE) {
+    
+    calculation = df %>%
+      group_by({{ group_var }}) %>%
+      group_by({{ group_var }}, {{ summary_var }}) %>%
+      summarise(n = n(), .groups = "keep") %>%
+      group_by({{ group_var }}, is.na({{ summary_var }})) %>%
+      drop_na({{ summary_var }}) %>%
+      group_by({{ group_var }}) %>%
+      mutate(
+        perc = 100 * n / sum(n),
+        across(where(is.double), ~ round_correctly(., {{ decimals }})),
+        value = paste0(n, " (", perc, "%)")
+      )
+    
+  }
+    
+  summary = calculation %>%
     filter(!is.na({{ summary_var }})) %>%
     select({{ group_var }}, {{ summary_var }}, value) %>%
     pivot_longer(cols = !c({{ group_var }}, {{ summary_var }})) %>%
@@ -45,8 +89,10 @@ summarise_categorical = function(df, summary_var, group_var, set_name) {
           df %>% pull({{ summary_var }})
         )
       )$p.value,
-      across(where(is.double), ~ round(., digits = 3)),
-      `P-value` = if_else(`P-value` < 0.001, "<0.001", as.character(`P-value`)),
+      across(where(is.double), ~ round_correctly(., 3)),
+      `P-value` = if_else(
+        `P-value` < 0.001, "<0.001", as.character(`P-value`)
+      ),
       Characteristic = str_replace_all({{ summary_var }}, "_", " "),
       Characteristic = str_to_sentence(Characteristic),
       Characteristic = str_c("   ", Characteristic)
