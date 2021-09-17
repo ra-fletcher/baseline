@@ -78,6 +78,6 @@ If you encounter a clear bug or have any questions/suggestions, please feel free
 
 ## Credits
 
-Rob Fletcher - Associate Biostatistician / Research Associate | The George Institute for Global Health
+**Rob Fletcher** - Associate Biostatistician / Research Associate | The George Institute for Global Health
 
-Tom Matcham - Head of Data Science | Intechnica
+**Tom Matcham** - Head of Data Science | Intechnica
