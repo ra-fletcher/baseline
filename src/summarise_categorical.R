@@ -95,7 +95,7 @@ summarise_categorical = function(df,
       ),
       Characteristic = str_replace_all({{ summary_var }}, "_", " "),
       Characteristic = str_to_sentence(Characteristic),
-      Characteristic = str_c("   ", Characteristic)
+      Characteristic = str_c("  ", Characteristic)
     ) %>%
     ungroup() %>% 
     select(Characteristic, `0`, `1`, `P-value`) %>% 
