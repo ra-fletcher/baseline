@@ -23,15 +23,27 @@ The current version of baseline provides two functions which facilitate the crea
 ``` r
 summarise_continuous(
     stroke_df, 
-    bmi, 
+    age, 
     stroke, 
     normally_distributed = TRUE,
     set_name = "Age, years"
   )
 #> # A tibble: 1 × 4
-#>  Characteristic `0`      `1`      `P-value`
-#>  <chr>          <chr>    <chr>    <chr>    
-#> 1 Age, years     28.8±7.9 30.5±6.3 <0.001
+#>   Characteristic `0`     `1`       `P-value`
+#>   <chr>          <chr>   <chr>     <chr>    
+#> 1 Age, years     42±22.3 67.7±12.7 <0.001 
+
+summarise_continuous(
+    stroke_df, 
+    bmi, 
+    stroke, 
+    normally_distributed = FALSE,
+    set_name = "Body-mass index, kg/m^2"
+  )
+#> # A tibble: 1 × 4
+#>   Characteristic          `0`             `1`               `P-value`
+#>   <chr>                   <chr>           <chr>             <chr>    
+#> 1 Body-mass index, kg/m^2 28 (23.4, 33.1) 29.7 (26.4, 33.7) <0.001 
 
 summarise_categorical(
     stroke_df, 
@@ -41,12 +53,12 @@ summarise_categorical(
     set_name = "Smoking status"
   )
 #> # A tibble: 4 × 4
-#>  Characteristic      `0`            `1`          `P-value`
-#>  <chr>               <chr>          <chr>        <chr>    
-#> 1 "Smoking status"    ""             ""           "0.003"  
-#> 2 "  Never smoker"    "1802 (37.1%)" "90 (36.1%)" ""       
-#> 3 "  Former smoker"   "815 (16.8%)"  "70 (28.1%)" ""       
-#> 4 "  Current smoker"  "747 (15.4%)"  "42 (16.9%)" "" 
+#>   Characteristic     `0`            `1`          `P-value`
+#>   <chr>              <chr>          <chr>        <chr>    
+#> 1 "Smoking status"   ""             ""           "0.003"  
+#> 2 "  Never smoker"   "1802 (37.1%)" "90 (36.1%)" ""       
+#> 3 "  Former smoker"  "815 (16.8%)"  "70 (28.1%)" ""       
+#> 4 "  Current smoker" "747 (15.4%)"  "42 (16.9%)" ""       
 ```
 
 ## Folder structure
