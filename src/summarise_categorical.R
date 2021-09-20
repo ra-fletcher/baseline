@@ -29,15 +29,8 @@ summarise_categorical = function(df,
   # -------
   # tibble
   
-  # Function to correctly round numbers (`round()` function in R works weirdly)
-  round_correctly = function(x, n) {
-    pos_neg = sign(x)
-    y = abs(x) * 10^n
-    y = y + 0.5 + sqrt(.Machine$double.eps)
-    y = trunc(y)
-    y = y / 10^n
-    return(y * pos_neg)
-  }
+  # Load function to correctly round numbers
+  source("src/utils.R")
   
   # Calculation which INCLUDES individuals with missing values in the percentage
   # value
@@ -51,7 +44,7 @@ summarise_categorical = function(df,
       group_by({{ group_var }}) %>%
       mutate(
         perc = 100 * n / sum(n),
-        across(where(is.double), ~ round_correctly(., {{ decimals }})),
+        across(where(is.double), ~round_correctly(., {{ decimals }})),
         value = paste0(n, " (", perc, "%)")
       )
     
@@ -70,7 +63,7 @@ summarise_categorical = function(df,
       group_by({{ group_var }}) %>%
       mutate(
         perc = 100 * n / sum(n),
-        across(where(is.double), ~ round_correctly(., {{ decimals }})),
+        across(where(is.double), ~round_correctly(., {{ decimals }})),
         value = paste0(n, " (", perc, "%)")
       )
     
@@ -89,7 +82,7 @@ summarise_categorical = function(df,
           df %>% pull({{ summary_var }})
         )
       )$p.value,
-      across(where(is.double), ~ round_correctly(., 3)),
+      across(where(is.double), ~round_correctly(., 3)),
       `P-value` = if_else(
         `P-value` < 0.001, "<0.001", as.character(`P-value`)
       ),
