@@ -84,7 +84,7 @@ Below is an overview of the folders in this repository that are actively synchro
 
 ## Contact
 
-If you encounter a clear bug or have any questions/suggestions, please feel free to contact me via my email: [rob_fletcher@hotmail.co.uk](mailto:rob_fletcher@hotmail.co.uk?subject=Inquiry).
+If you encounter a clear bug or have any questions/suggestions, please feel free to contact me via my email: [rob_fletcher@hotmail.co.uk](mailto:rob_fletcher@hotmail.co.uk?subject=Inquiry)
 
 -----
 
