@@ -66,7 +66,7 @@ summarise_categorical(
 Below is an overview of the folders in this repository that are actively synchronised with GitHub. It is structured roughly in-line with what is recommended in this [R best practices blog](https://kdestasio.github.io/post/r_best_practices/).
 
 **baseline**   
-     ├── code  
+     ├── test  
      ├── data  
      └── src  
 
