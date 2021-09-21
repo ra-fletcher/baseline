@@ -70,9 +70,9 @@ Below is an overview of the folders in this repository that are actively synchro
      ├── data  
      └── src  
 
-### code
+### test
 
-`code` contains the code used to import the data and test the functions.
+`test` contains the code used to import the data and test the functions.
 
 ### data
 
