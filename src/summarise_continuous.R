@@ -9,17 +9,17 @@
 
 summarise_continuous = function(df, 
                                 summary_var, 
-                                group_by, 
+                                group_var, 
                                 decimals = 1,
                                 normally_distributed = TRUE,
-                                set_name) {
+                                set_name = default_name) {
   # Summarise continuous variables for baseline characteristics tables
   # 
   # Parameters
   # ----------
   # df : tibble
   # summary_var : variable to summarise
-  # group_by : variable to group by
+  # group_var : variable to group by
   # decimals : integer (number of decimal places to round numbers)
   # normally_distributed : boolean (whether summary_var is normally-distributed 
   #                                 or not, decides whether mean/SD with T-test 
@@ -36,26 +36,29 @@ summarise_continuous = function(df,
   # Unicode character for +/-
   plus_minus = bquote("\U00B1")
   
+  # Default name
+  default_name = df %>% select({{ summary_var }}) %>% colnames()
+  
   # Create summary for normally-distributed variables (mean±SD with T-test
   # p-value)
   if (normally_distributed == TRUE) {
     
     summary = df %>%
-      group_by({{ group_by }}) %>%
+      group_by({{ group_var }}) %>%
       drop_na({{ summary_var }}) %>% 
       summarise(mean = mean({{ summary_var }}), sd = sd({{ summary_var }})) %>%
       mutate(
         across(where(is.double), ~round_correctly(., {{ decimals }})),
         value = paste0(mean, plus_minus, sd)
       ) %>%
-      select({{ group_by }}, value) %>%
+      select({{ group_var }}, value) %>%
       rename(!!set_name := value) %>% 
-      pivot_longer(cols = !{{ group_by }}) %>% 
-      pivot_wider(names_from = {{ group_by }}) %>% 
+      pivot_longer(cols = !{{ group_var }}) %>% 
+      pivot_wider(names_from = {{ group_var }}) %>% 
       mutate(
         `P-value` = t.test(
-          filter(df, {{ group_by }} == 1) %>% pull({{ summary_var }}),
-          filter(df, {{ group_by }} == 0) %>% pull({{ summary_var }})
+          filter(df, {{ group_var }} == 1) %>% pull({{ summary_var }}),
+          filter(df, {{ group_var }} == 0) %>% pull({{ summary_var }})
         )$p.value,
         across(where(is.double), ~round_correctly(., 3)),
         `P-value` = if_else(
@@ -71,7 +74,7 @@ summarise_continuous = function(df,
   if (normally_distributed == FALSE) {
     
     summary = df %>%
-      group_by({{ group_by }}) %>%
+      group_by({{ group_var }}) %>%
       drop_na({{ summary_var }}) %>% 
       summarise(
         median = median({{ summary_var }}), 
@@ -82,14 +85,14 @@ summarise_continuous = function(df,
         across(where(is.double), ~round_correctly(., {{ decimals }})),
         value = paste0(median, " (", lower, ", ", upper, ")")
       ) %>%
-      select({{ group_by }}, value) %>%
+      select({{ group_var }}, value) %>%
       rename(!!set_name := value) %>% 
-      pivot_longer(cols = !{{ group_by }}) %>% 
-      pivot_wider(names_from = {{ group_by }}) %>% 
+      pivot_longer(cols = !{{ group_var }}) %>% 
+      pivot_wider(names_from = {{ group_var }}) %>% 
       mutate(
         `P-value` = wilcox.test(
-          filter(df, {{ group_by }} == 1) %>% pull({{ summary_var }}),
-          filter(df, {{ group_by }} == 0) %>% pull({{ summary_var }})
+          filter(df, {{ group_var }} == 1) %>% pull({{ summary_var }}),
+          filter(df, {{ group_var }} == 0) %>% pull({{ summary_var }})
         )$p.value,
         across(where(is.double), ~round_correctly(., 3)),
         `P-value` = if_else(
