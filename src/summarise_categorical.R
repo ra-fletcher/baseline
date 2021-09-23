@@ -37,11 +37,11 @@ summarise_categorical = function(df,
   if (include_missing == TRUE) {
     
     calculation = df %>%
-      group_by({{ group_var }}) %>%
-      group_by({{ group_var }}, {{ summary_var }}) %>%
+      group_by({{ group_by }}) %>%
+      group_by({{ group_by }}, {{ summary_var }}) %>%
       summarise(n = n(), .groups = "keep") %>%
-      group_by({{ group_var }}, is.na({{ summary_var }})) %>%
-      group_by({{ group_var }}) %>%
+      group_by({{ group_by }}, is.na({{ summary_var }})) %>%
+      group_by({{ group_by }}) %>%
       mutate(
         perc = 100 * n / sum(n),
         across(where(is.double), ~round_correctly(., {{ decimals }})),
@@ -55,12 +55,12 @@ summarise_categorical = function(df,
   if (include_missing == FALSE) {
     
     calculation = df %>%
-      group_by({{ group_var }}) %>%
-      group_by({{ group_var }}, {{ summary_var }}) %>%
+      group_by({{ group_by }}) %>%
+      group_by({{ group_by }}, {{ summary_var }}) %>%
       summarise(n = n(), .groups = "keep") %>%
-      group_by({{ group_var }}, is.na({{ summary_var }})) %>%
+      group_by({{ group_by }}, is.na({{ summary_var }})) %>%
       drop_na({{ summary_var }}) %>%
-      group_by({{ group_var }}) %>%
+      group_by({{ group_by }}) %>%
       mutate(
         perc = 100 * n / sum(n),
         across(where(is.double), ~round_correctly(., {{ decimals }})),
@@ -71,14 +71,14 @@ summarise_categorical = function(df,
     
   summary = calculation %>%
     filter(!is.na({{ summary_var }})) %>%
-    select({{ group_var }}, {{ summary_var }}, value) %>%
-    pivot_longer(cols = !c({{ group_var }}, {{ summary_var }})) %>%
-    pivot_wider(names_from = {{ group_var }}) %>%
+    select({{ group_by }}, {{ summary_var }}, value) %>%
+    pivot_longer(cols = !c({{ group_by }}, {{ summary_var }})) %>%
+    pivot_wider(names_from = {{ group_by }}) %>%
     mutate(
       across(c(`0`, `1`), ~ if_else(is.na(.), "0 (0.0%)", .)),
       `P-value` = chisq.test(
         table(
-          df %>% pull({{ group_var }}),
+          df %>% pull({{ group_by }}),
           df %>% pull({{ summary_var }})
         )
       )$p.value,
