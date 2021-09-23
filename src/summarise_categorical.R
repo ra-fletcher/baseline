@@ -9,7 +9,7 @@
 
 summarise_categorical = function(df, 
                                  summary_var, 
-                                 group_var,
+                                 group_by,
                                  decimals = 1,
                                  include_missing = TRUE,
                                  set_name) {
@@ -19,7 +19,7 @@ summarise_categorical = function(df,
   # ----------
   # df : tibble
   # summary_var : variable to summarise
-  # group_var : variable to group by
+  # group_by : variable to group by
   # decimals : integer (number of decimal places to round numbers)
   # include_missing : boolean (whether individuals with missing values should be 
   #                            included)
@@ -30,11 +30,11 @@ summarise_categorical = function(df,
   # tibble
   
   # Load function to correctly round numbers
-  source("src/utils.R")
+  source(here::here("src", "utils.R"))
   
   # Calculation which INCLUDES individuals with missing values in the percentage
   # value
-  if(include_missing == TRUE) {
+  if (include_missing == TRUE) {
     
     calculation = df %>%
       group_by({{ group_var }}) %>%
@@ -52,7 +52,7 @@ summarise_categorical = function(df,
   
   # Calculation which EXCLUDES individuals with missing values in the percentage
   # value
-  if(include_missing == FALSE) {
+  if (include_missing == FALSE) {
     
     calculation = df %>%
       group_by({{ group_var }}) %>%

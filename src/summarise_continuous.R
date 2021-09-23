@@ -9,7 +9,7 @@
 
 summarise_continuous = function(df, 
                                 summary_var, 
-                                group_var, 
+                                group_by, 
                                 decimals = 1,
                                 normally_distributed = TRUE,
                                 set_name) {
@@ -19,7 +19,7 @@ summarise_continuous = function(df,
   # ----------
   # df : tibble
   # summary_var : variable to summarise
-  # group_var : variable to group by
+  # group_by : variable to group by
   # decimals : integer (number of decimal places to round numbers)
   # normally_distributed : boolean (whether summary_var is normally-distributed 
   #                                 or not, decides whether mean/SD with T-test 
@@ -29,16 +29,16 @@ summarise_continuous = function(df,
   # Returns
   # -------
   # tibble
-  
+
   # Load function to correctly round numbers
-  source("src/utils.R")
+  source(here::here("src", "utils.R"))
   
   # Unicode character for +/-
   plus_minus = bquote("\U00B1")
   
   # Create summary for normally-distributed variables (mean±SD with T-test
   # p-value)
-  if(normally_distributed == TRUE) {
+  if (normally_distributed == TRUE) {
     
     summary = df %>%
       group_by({{ group_var }}) %>%
@@ -68,7 +68,7 @@ summarise_continuous = function(df,
   
   # Create summary for skewed variables (median(IQR) with Wilcoxon rank-sum
   # p-value)
-  if(normally_distributed == FALSE) {
+  if (normally_distributed == FALSE) {
     
     summary = df %>%
       group_by({{ group_var }}) %>%
