@@ -45,8 +45,7 @@ baseline_continuous = bind_rows(
     set_name = "Body-mass index, kg/m^2"
   ),
   summarise_continuous(
-    stroke_df, avg_glucose_level, stroke,
-    normally_distributed = TRUE,
+    stroke_df, avg_glucose_level, stroke, normally_distributed = TRUE,
     set_name = "Average blood glucose level, mmol/L"
   )
 )
