@@ -97,7 +97,7 @@ Below is an overview of the folders in this repository that are actively synchro
 
 ## Contact
 
-If you encounter a clear bug or have any questions/suggestions, please feel free to contact me via my email: [rfletcher@georgeinstitute.org.au](mailto:rfletcher@georgeinstitute.org.au?subject=Inquiry)
+If you encounter a clear bug or have any questions/suggestions, please feel free to contact me via my [email](mailto:rfletcher@georgeinstitute.org.au?subject=Inquiry).
 
 -----
 
