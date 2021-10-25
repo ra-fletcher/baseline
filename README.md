@@ -105,4 +105,6 @@ If you encounter a clear bug or have any questions/suggestions, please feel free
 
 **Rob Fletcher** - Associate Biostatistician / Research Associate | The George Institute for Global Health
 
+**Patrick Rockenschaub** - Senior Medical Statistician | Sensyne Health
+
 **Tom Matcham** - Head of Data Science | Intechnica
