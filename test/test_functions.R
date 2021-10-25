@@ -12,14 +12,17 @@
 library(here)
 library(tidyverse)
 
+
 # Load data ---------------------------------------------------------------
 
 stroke_df = read_rds(here::here("data", "stroke_data.rds"))
+
 
 # Source functions --------------------------------------------------------
 
 source(here::here("src", "summarise_continuous.R"))
 source(here::here("src", "summarise_categorical.R"))
+
 
 # Define groups for the table ---------------------------------------------
 
@@ -33,47 +36,26 @@ tbl_col_names =
     p_value = "P-value"
   )
 
-# Summarise numeric variables ---------------------------------------------
 
-baseline_continuous = bind_rows(
+# Summarise continuous variables ---------------------------------------------
+
+baseline_continuous = stroke_df %>% 
   summarise_continuous(
-    stroke_df, age, stroke, normally_distributed = TRUE,
-    set_name = "Age, years"
-  ),
-  summarise_continuous(
-    stroke_df, bmi, stroke, normally_distributed = FALSE,
-    set_name = "Body-mass index, kg/m^2"
-  ),
-  summarise_continuous(
-    stroke_df, avg_glucose_level, stroke, normally_distributed = TRUE,
-    set_name = "Average blood glucose level, mmol/L"
+    c(age, bmi, avg_glucose_level),
+    .group_by = stroke,
+    normally_distributed = TRUE
   )
-)
+
 
 # Summarise categorical variables -----------------------------------------
 
-baseline_categorical = bind_rows(
+baseline_categorical = stroke_df %>% 
   summarise_categorical(
-    stroke_df, gender, stroke, decimals = 1, include_missing = TRUE,
-    set_name = "Sex"
-  ),
-  summarise_categorical(
-    stroke_df, smoking_status, stroke, decimals = 1, include_missing = TRUE,
-    set_name = "Smoking status"
-  ),
-  summarise_categorical(
-    stroke_df, hypertension, stroke, decimals = 1, include_missing = TRUE,
-    set_name = "Has hypertension"
-  ),
-  summarise_categorical(
-    stroke_df, work_type, stroke, decimals = 1, include_missing = TRUE,
-    set_name = "Current employment status"
-  ),
-  summarise_categorical(
-    stroke_df, residence_type, stroke, decimals = 1, include_missing = TRUE,
-    set_name = "Region"
-  ),
-)
+    c(gender, smoking_status, hypertension, work_type), 
+    stroke,
+    include_missing = TRUE
+  )
+
 
 # Concatenate to produce baseline table -----------------------------------
 
@@ -87,4 +69,16 @@ baseline_tbl =
     !!tbl_col_names$cases := `1`,
     !!tbl_col_names$controls := `0`,
     `P-value`
+  ) %>% 
+  mutate(
+    Characteristic = case_when(
+      str_detect(Characteristic, "^age") ~ "Age, years",
+      str_detect(Characteristic, "^bmi") ~ "Body-mass index, kg/m^2",
+      str_detect(Characteristic, "^avg") ~ "Average blood glucose level, mmol/L",
+      str_detect(Characteristic, "^gender") ~ "Gender",
+      str_detect(Characteristic, "^smoking") ~ "Smoking status",
+      str_detect(Characteristic, "^hypertension") ~ "Hypertension",
+      str_detect(Characteristic, "^work") ~ "Employment",
+      TRUE ~ Characteristic
+    )
   )
