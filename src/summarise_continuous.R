@@ -23,10 +23,10 @@ summarise_continuous = function(df,
   #             categories `0` and `1`
   # decimals : integer value (number of decimal places to round numbers), 
   #            default is 1 decimal place
-  # normally_distributed : boolean (whether summary_var is normally-distributed
-  #                        [==TRUE] or skewed [==FALSE], decides whether mean/SD 
-  #                        with T-test or median/IQR with Wilcoxon are 
-  #                        returned), default is TRUE
+  # normally_distributed : boolean (whether `summary_vars` are normally 
+  #                        distributed [==TRUE] or skewed [==FALSE], decides 
+  #                        whether mean/SD with T-test or median/IQR with 
+  #                        Wilcoxon are returned), default is TRUE
   #
   # Returns
   # -------
