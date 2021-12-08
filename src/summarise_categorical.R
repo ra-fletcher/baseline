@@ -18,7 +18,7 @@ summarise_categorical = function(df,
   # Arguments
   # ---------
   # df : tibble
-  # summary_vars : variable to summarise
+  # summary_vars : variable(s) to summarise, i.e. x or c(x, y, z)
   # .group_by : [OPTIONAL] variable to group by, MUST be a binary variable with
   #             categories `0` and `1`
   # decimals : integer value (number of decimal places to round numbers), 
