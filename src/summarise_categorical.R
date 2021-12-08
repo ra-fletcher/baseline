@@ -24,7 +24,7 @@ summarise_categorical = function(df,
   # decimals : integer value (number of decimal places to round numbers 
   #            displayed in the output), default is 1 decimal place
   # include_missing : boolean (whether individuals with missing values should be 
-  #                   included), defauly is TRUE
+  #                   included), default is TRUE
   #
   # Returns
   # -------
