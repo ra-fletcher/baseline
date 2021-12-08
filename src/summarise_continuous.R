@@ -21,8 +21,8 @@ summarise_continuous = function(df,
   # summary_vars : variable(s) to summarise, i.e. x or c(x, y, z)
   # .group_by : [OPTIONAL] variable to group by, MUST be a binary variable with
   #             categories `0` and `1`
-  # decimals : integer value (number of decimal places to round numbers), 
-  #            default is 1 decimal place
+  # decimals : integer value (number of decimal places to round numbers 
+  #            displayed in the output), default is 1 decimal place
   # normally_distributed : boolean (whether `summary_vars` are normally 
   #                        distributed [==TRUE] or skewed [==FALSE], decides 
   #                        whether mean/SD with T-test or median/IQR with 
