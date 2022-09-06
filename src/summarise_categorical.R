@@ -29,7 +29,7 @@ summarise_categorical = function(df,
   # Returns
   # -------
   # tibble
-
+  
   generate_stats = function(df, 
                             summary_var, 
                             .group_by,
@@ -37,13 +37,15 @@ summarise_categorical = function(df,
                             include_missing = TRUE) {
     # Generate summary statistics for one categorical variable for the purpose 
     # of building a baseline characteristics table
-  
+    
     # Load function to correctly round numbers
     source(here::here("src", "utils.R"))
-  
+    
     # Define characteristic name
     default_name = df %>% select({{ summary_var }}) %>% colnames()
-  
+    
+    group_values = df %>% pull({{ .group_by }}) %>% unique %>% as.character()
+    
     if (missing(.group_by)) {
       # Calculation which INCLUDES individuals with missing values in the 
       # percentage value where the binary grouping variable is missing
@@ -57,8 +59,8 @@ summarise_categorical = function(df,
             across(where(is.double), ~round_correctly(., {{ decimals }})),
             value = paste0(n, " (", perc, "%)")
           )
-      # Calculation which EXCLUDES individuals with missing values in the 
-      # percentage value where the binary grouping variable is missing
+        # Calculation which EXCLUDES individuals with missing values in the 
+        # percentage value where the binary grouping variable is missing
       } else if (include_missing == FALSE) {
         calculation = df %>%
           group_by({{ summary_var }}) %>%
@@ -94,8 +96,8 @@ summarise_categorical = function(df,
             across(where(is.double), ~round_correctly(., {{ decimals }})),
             value = paste0(n, " (", perc, "%)")
           )
-      # Calculation which EXCLUDES individuals with missing values in the 
-      # percentage value where the binary grouping variable is supplied
+        # Calculation which EXCLUDES individuals with missing values in the 
+        # percentage value where the binary grouping variable is supplied
       } else if (include_missing == FALSE) {
         calculation = df %>%
           group_by({{ .group_by }}) %>%
@@ -116,7 +118,7 @@ summarise_categorical = function(df,
         pivot_longer(cols = !c({{ .group_by }}, {{ summary_var }})) %>%
         pivot_wider(names_from = {{ .group_by }}) %>%
         mutate(
-          across(c(`0`, `1`), ~ if_else(is.na(.), "0 (0.0%)", .)),
+          across(all_of(group_values), ~ if_else(is.na(.), "0 (0.0%)", .)),
           `P-value` = chisq.test(
             table(
               df %>% pull({{ .group_by }}),
@@ -132,16 +134,16 @@ summarise_categorical = function(df,
           Characteristic = str_c("  ", Characteristic)
         ) %>%
         ungroup() %>% 
-        select(Characteristic, `0`, `1`, `P-value`) %>% 
-        add_row(
-          Characteristic := !!{{ default_name }},
-          `0` = "", `1` = "", `P-value` = NA,
-          .before = 1
-        ) %>% 
+        select(Characteristic, all_of(group_values), `P-value`)
+      
+      summary = summary %>% 
+        add_row(!!!c(default_name, "", "", NA) %>%
+                  set_names(c("Characteristic", group_values, "P-value")),
+                .before = 1) %>% 
         fill(`P-value`, .direction = "up")
       summary_head = summary %>% slice(1)
       summary_tail = summary %>% 
-        anti_join(summary_head, by = c("Characteristic", "0", "1", "P-value")) %>% 
+        anti_join(summary_head, by = c("Characteristic", group_values, "P-value")) %>% 
         mutate(`P-value` = "")
       summary_clean = bind_rows(summary_head, summary_tail)
     }
