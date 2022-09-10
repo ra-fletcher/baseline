@@ -44,7 +44,29 @@ summarise_categorical = function(df,
     # Define characteristic name
     default_name = df %>% select({{ summary_var }}) %>% colnames()
     
-    group_values = df %>% pull({{ .group_by }}) %>% unique %>% as.character()
+    # Define group column names for grouping variable
+    if (missing(.group_by)) {
+      total_value = df %>% 
+        mutate(
+          n = n(),
+          total = paste0("total (n = ", n, ")")
+        ) %>% 
+        pull(total) %>% 
+        unique() %>% 
+        as.character()
+    } else {
+      df = df %>%
+        group_by({{ .group_by }}) %>% 
+        mutate(
+          n = n(),
+          {{ .group_by }} := paste0({{.group_by}}, " (n = ", n, ")")
+        )
+      
+      group_values = df %>% 
+        pull({{ .group_by }}) %>% 
+        unique() %>% 
+        as.character()
+    }
     
     if (missing(.group_by)) {
       # Calculation which INCLUDES individuals with missing values in the 
@@ -56,7 +78,7 @@ summarise_categorical = function(df,
           drop_na({{ summary_var }}) %>%
           mutate(
             perc = 100 * n / df %>% nrow(),
-            across(where(is.double), ~round_correctly(., {{ decimals }})),
+            across(where(is.double), ~rnd(., {{ decimals }})),
             value = paste0(n, " (", perc, "%)")
           )
         # Calculation which EXCLUDES individuals with missing values in the 
@@ -68,7 +90,7 @@ summarise_categorical = function(df,
           drop_na({{ summary_var }}) %>%
           mutate(
             perc = 100 * n / df %>% drop_na({{ summary_var }}) %>% nrow(),
-            across(where(is.double), ~round_correctly(., {{ decimals }})),
+            across(where(is.double), ~rnd(., {{ decimals }})),
             value = paste0(n, " (", perc, "%)")
           )
       }
@@ -79,8 +101,9 @@ summarise_categorical = function(df,
           Characteristic = str_to_sentence(Characteristic),
           Characteristic = str_c("  ", Characteristic)
         ) %>%
-        select(Characteristic, total = value) %>%
-        add_row(Characteristic := !!{{ default_name }}, total = "", .before = 1) 
+        select(Characteristic, value) %>%
+        add_row(Characteristic := !!{{ default_name }}, value = "", .before = 1) %>% 
+        rename(!!total_value := value)
     } else {
       # Calculation which INCLUDES individuals with missing values in the 
       # percentage value where the binary grouping variable is supplied
@@ -93,7 +116,7 @@ summarise_categorical = function(df,
           group_by({{ .group_by }}) %>%
           mutate(
             perc = 100 * n / sum(n),
-            across(where(is.double), ~round_correctly(., {{ decimals }})),
+            across(where(is.double), ~rnd(., {{ decimals }})),
             value = paste0(n, " (", perc, "%)")
           )
         # Calculation which EXCLUDES individuals with missing values in the 
@@ -108,7 +131,7 @@ summarise_categorical = function(df,
           group_by({{ .group_by }}) %>%
           mutate(
             perc = 100 * n / sum(n),
-            across(where(is.double), ~round_correctly(., {{ decimals }})),
+            across(where(is.double), ~rnd(., {{ decimals }})),
             value = paste0(n, " (", perc, "%)")
           )
       }
@@ -125,7 +148,7 @@ summarise_categorical = function(df,
               df %>% pull({{ summary_var }})
             )
           )$p.value,
-          across(where(is.double), ~round_correctly(., 3)),
+          across(where(is.double), ~rnd(., 3)),
           `P-value` = if_else(
             `P-value` < 0.001, "<0.001", as.character(`P-value`)
           ),
@@ -137,9 +160,10 @@ summarise_categorical = function(df,
         select(Characteristic, all_of(group_values), `P-value`)
       
       summary = summary %>% 
-        add_row(!!!c(default_name, "", "", NA) %>%
-                  set_names(c("Characteristic", group_values, "P-value")),
-                .before = 1) %>% 
+        add_row(
+          !!!c(default_name, "", "", NA) %>%
+            set_names(c("Characteristic", group_values, "P-value")),
+          .before = 1) %>% 
         fill(`P-value`, .direction = "up")
       summary_head = summary %>% slice(1)
       summary_tail = summary %>% 
@@ -166,7 +190,8 @@ summarise_categorical = function(df,
           df, !!sym(.), , decimals, include_missing
         )
       ) %>% 
-      bind_rows()
+      bind_rows() %>% 
+      rename_with(str_to_sentence)
   } else {
     # Loop function over selected `summary_vars` with the binary grouping 
     # variable supplied
@@ -176,6 +201,7 @@ summarise_categorical = function(df,
           df, !!sym(.), {{ .group_by }}, decimals, include_missing
         )
       ) %>% 
-      bind_rows()
+      bind_rows() %>% 
+      rename_with(str_to_sentence)
   }
 }

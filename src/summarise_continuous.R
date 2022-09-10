@@ -48,6 +48,30 @@ summarise_continuous = function(df,
   
     # Define characteristic name
     default_name = df %>% select({{ summary_var }}) %>% colnames()
+    
+    # Define group column names for grouping variable
+    if (missing(.group_by)) {
+      total_value = df %>% 
+        mutate(
+          n = n(),
+          total = paste0("total (n = ", n, ")")
+        ) %>% 
+        pull(total) %>% 
+        unique() %>% 
+        as.character()
+    } else {
+      df = df %>%
+        group_by({{ .group_by }}) %>% 
+        mutate(
+          n = n(),
+          {{ .group_by }} := paste0({{.group_by}}, " (n = ", n, ")")
+        )
+      
+      group_values = df %>% 
+        pull({{ .group_by }}) %>% 
+        unique() %>% 
+        as.character()
+    }
    
     if (missing(.group_by)) {
       # Create summary for normally-distributed variables (mean±SD with T-test
@@ -60,13 +84,13 @@ summarise_continuous = function(df,
             sd = sd({{ summary_var }})
           ) %>%
           mutate(
-            across(where(is.double), ~round_correctly(., {{ decimals }})),
+            across(where(is.double), ~rnd(., {{ decimals }})),
             value = paste0(mean, plus_minus, sd)
           ) %>%
           select(value) %>%
           rename(!!default_name := value) %>% 
           pivot_longer(everything()) %>% 
-          rename(Characteristic = name, total = value)
+          rename(Characteristic = name, !!total_value := value)
       # Create summary for skewed variables (median(IQR) with Wilcoxon rank-sum
       # p-value) where the binary grouping variable is missing
       } else if (normally_distributed == FALSE) {
@@ -78,13 +102,13 @@ summarise_continuous = function(df,
             upper = quantile({{ summary_var }}, 0.75)
           ) %>%
           mutate(
-            across(where(is.double), ~round_correctly(., {{ decimals }})),
+            across(where(is.double), ~rnd(., {{ decimals }})),
             value = paste0(median, " (", lower, ", ", upper, ")")
           ) %>%
           select(value) %>%
           rename(!!default_name := value) %>% 
           pivot_longer(everything()) %>% 
-          rename(Characteristic = name, total = value)
+          rename(Characteristic = name, !!total_value := value)
       }
     } else {
       # Create summary for normally-distributed variables (mean±SD with T-test
@@ -98,7 +122,7 @@ summarise_continuous = function(df,
             sd = sd({{ summary_var }})
           ) %>%
           mutate(
-            across(where(is.double), ~round_correctly(., {{ decimals }})),
+            across(where(is.double), ~rnd(., {{ decimals }})),
             value = paste0(mean, plus_minus, sd)
           ) %>%
           select({{ .group_by }}, value) %>%
@@ -107,10 +131,13 @@ summarise_continuous = function(df,
           pivot_wider(names_from = {{ .group_by }}) %>% 
           mutate(
             `P-value` = t.test(
-              filter(df, {{ .group_by }} == 1) %>% pull({{ summary_var }}),
-              filter(df, {{ .group_by }} == 0) %>% pull({{ summary_var }})
+              filter(df, {{ .group_by }} == min(group_values)) %>% 
+                pull({{ summary_var }}),
+              filter(
+                df, {{ .group_by }} == max(group_values)) %>% 
+                pull({{ summary_var }})
             )$p.value,
-            across(where(is.double), ~round_correctly(., 3)),
+            across(where(is.double), ~rnd(., 3)),
             `P-value` = if_else(
               `P-value` < 0.001, "<0.001", as.character(`P-value`)
             )
@@ -128,7 +155,7 @@ summarise_continuous = function(df,
             upper = quantile({{ summary_var }}, 0.75)
           ) %>%
           mutate(
-            across(where(is.double), ~round_correctly(., {{ decimals }})),
+            across(where(is.double), ~rnd(., {{ decimals }})),
             value = paste0(median, " (", lower, ", ", upper, ")")
           ) %>%
           select({{ .group_by }}, value) %>%
@@ -137,10 +164,12 @@ summarise_continuous = function(df,
           pivot_wider(names_from = {{ .group_by }}) %>% 
           mutate(
             `P-value` = wilcox.test(
-              filter(df, {{ .group_by }} == 1) %>% pull({{ summary_var }}),
-              filter(df, {{ .group_by }} == 0) %>% pull({{ summary_var }})
+              filter(df, {{ .group_by }} == min(group_values)) %>% 
+                pull({{ summary_var }}),
+              filter(df, {{ .group_by }} == max(group_values)) %>% 
+                pull({{ summary_var }})
             )$p.value,
-            across(where(is.double), ~round_correctly(., 3)),
+            across(where(is.double), ~rnd(., 3)),
             `P-value` = if_else(
               `P-value` < 0.001, "<0.001", as.character(`P-value`)
             )
@@ -167,7 +196,8 @@ summarise_continuous = function(df,
           df, !!sym(.), , decimals, normally_distributed
         )
       ) %>% 
-      bind_rows()
+      bind_rows() %>% 
+      rename_with(str_to_sentence)
   } else {
     # Loop function over selected `summary_vars` with the binary grouping 
     # variable supplied
@@ -177,6 +207,7 @@ summarise_continuous = function(df,
           df, !!sym(.), {{ .group_by }}, decimals, normally_distributed
         )
       ) %>% 
-      bind_rows()
+      bind_rows() %>% 
+      rename_with(str_to_sentence)
   }
 }

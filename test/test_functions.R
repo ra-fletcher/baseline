@@ -42,7 +42,7 @@ tbl_col_names =
 baseline_continuous = stroke_df %>% 
   summarise_continuous(
     c(age, bmi, avg_glucose_level),
-    .group_by = stroke,
+    .group_by = stroke_desc,
     normally_distributed = TRUE
   )
 
@@ -52,7 +52,7 @@ baseline_continuous = stroke_df %>%
 baseline_categorical = stroke_df %>% 
   summarise_categorical(
     c(gender, smoking_status, hypertension, work_type), 
-    stroke,
+    .group_by = stroke_desc,
     include_missing = TRUE
   )
 

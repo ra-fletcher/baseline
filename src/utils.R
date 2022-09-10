@@ -8,7 +8,7 @@
 #
 #*******************************************************************************
 
-round_correctly = function(x, decimals) {
+rnd = function(x, decimals) {
   # Correctly round numbers (`round()` function in R works weirdly)
   # 
   # Parameters
