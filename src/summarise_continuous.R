@@ -10,8 +10,8 @@
 summarise_continuous = function(df,
                                 .cols,
                                 .group_by,
-                                decimals = 1,
-                                normally_distributed = TRUE) {
+                                .decimals = 1,
+                                .normally_distributed = TRUE) {
   # Wrapper for `generate_stats()`, allowing for multiple continuous 
   # `.cols` to be specified using a tidyselect interface
   # 
@@ -21,9 +21,9 @@ summarise_continuous = function(df,
   # .cols : variable(s) to summarise, i.e. x or c(x, y, z)
   # .group_by : [OPTIONAL] variable to group by, MUST be a binary variable with
   #             categories `0` and `1`
-  # decimals : integer value (number of decimal places to round numbers 
+  # .decimals : integer value (number of decimal places to round numbers 
   #            displayed in the output), default is 1 decimal place
-  # normally_distributed : boolean (whether `.cols` are normally 
+  # .normally_distributed : boolean (whether `.cols` are normally 
   #                        distributed [==TRUE] or skewed [==FALSE], decides 
   #                        whether mean/SD with T-test or median/IQR with 
   #                        Wilcoxon are returned), default is TRUE
@@ -33,10 +33,10 @@ summarise_continuous = function(df,
   # tibble
 
   generate_stats = function(df, 
-                            summary_var, 
+                            .col, 
                             .group_by, 
-                            decimals = 1,
-                            normally_distributed = TRUE) {
+                            .decimals = 1,
+                            .normally_distributed = TRUE) {
     # Generate summary statistics for one continuous variable for the purpose of
     # building a baseline characteristics table
 
@@ -47,28 +47,27 @@ summarise_continuous = function(df,
     plus_minus = bquote("\U00B1")
   
     # Define characteristic name
-    default_name = df %>% select({{ summary_var }}) %>% colnames()
+    default_name = df %>% dplyr::select({{ .col }}) %>% colnames()
     
     # Define group column names for grouping variable
     if (missing(.group_by)) {
       total_value = df %>% 
-        mutate(
+        dplyr::mutate(
           n = n(),
           total = paste0("total (n = ", n, ")")
         ) %>% 
-        pull(total) %>% 
+        dplyr::pull(total) %>% 
         unique() %>% 
         as.character()
     } else {
       df = df %>%
-        group_by({{ .group_by }}) %>% 
-        mutate(
+        dplyr::group_by({{ .group_by }}) %>% 
+        dplyr::mutate(
           n = n(),
           {{ .group_by }} := paste0({{.group_by}}, " (n = ", n, ")")
         )
-      
       group_values = df %>% 
-        pull({{ .group_by }}) %>% 
+        dplyr::pull({{ .group_by }}) %>% 
         unique() %>% 
         as.character()
     }
@@ -76,104 +75,104 @@ summarise_continuous = function(df,
     if (missing(.group_by)) {
       # Create summary for normally-distributed variables (mean±SD with T-test
       # p-value) where the binary grouping variable is missing
-      if (normally_distributed == TRUE) {
+      if (.normally_distributed == TRUE) {
         summary = df %>%
-          drop_na({{ summary_var }}) %>% 
-          summarise(
-            mean = mean({{ summary_var }}), 
-            sd = sd({{ summary_var }})
+          tidyr::drop_na({{ .col }}) %>% 
+          dplyr::summarise(
+            mean = mean({{ .col }}), 
+            sd = sd({{ .col }})
           ) %>%
-          mutate(
-            across(where(is.double), ~rnd(., {{ decimals }})),
+          dplyr::mutate(
+            dplyr::across(where(is.double), ~rnd(., {{ .decimals }})),
             value = paste0(mean, plus_minus, sd)
           ) %>%
-          select(value) %>%
-          rename(!!default_name := value) %>% 
-          pivot_longer(everything()) %>% 
-          rename(Characteristic = name, !!total_value := value)
+          dplyr::select(value) %>%
+          dplyr::rename(!!default_name := value) %>% 
+          tidyr::pivot_longer(tidyselect::everything()) %>% 
+          dplyr::rename(Characteristic = name, !!total_value := value)
       # Create summary for skewed variables (median(IQR) with Wilcoxon rank-sum
       # p-value) where the binary grouping variable is missing
-      } else if (normally_distributed == FALSE) {
+      } else if (.normally_distributed == FALSE) {
         summary = df %>%
-          drop_na({{ summary_var }}) %>% 
-          summarise(
-            median = median({{ summary_var }}), 
-            lower = quantile({{ summary_var }}, 0.25),
-            upper = quantile({{ summary_var }}, 0.75)
+          tidyr::drop_na({{ .col }}) %>% 
+          dplyr::summarise(
+            median = median({{ .col }}), 
+            lower = quantile({{ .col }}, 0.25),
+            upper = quantile({{ .col }}, 0.75)
           ) %>%
-          mutate(
-            across(where(is.double), ~rnd(., {{ decimals }})),
+          dplyr::mutate(
+            dplyr::across(where(is.double), ~rnd(., {{ .decimals }})),
             value = paste0(median, " (", lower, ", ", upper, ")")
           ) %>%
-          select(value) %>%
-          rename(!!default_name := value) %>% 
-          pivot_longer(everything()) %>% 
-          rename(Characteristic = name, !!total_value := value)
+          dplyr::select(value) %>%
+          dplyr::rename(!!default_name := value) %>% 
+          tidyr::pivot_longer(tidyselect::everything()) %>% 
+          dplyr::rename(Characteristic = name, !!total_value := value)
       }
     } else {
       # Create summary for normally-distributed variables (mean±SD with T-test
       # p-value) where the binary grouping variable is supplied
-      if (normally_distributed == TRUE) {
+      if (.normally_distributed == TRUE) {
         summary = df %>%
-          group_by({{ .group_by }}) %>%
-          drop_na({{ summary_var }}) %>% 
-          summarise(
-            mean = mean({{ summary_var }}), 
-            sd = sd({{ summary_var }})
+          dplyr::group_by({{ .group_by }}) %>%
+          tidyr::drop_na({{ .col }}) %>% 
+          dplyr::summarise(
+            mean = mean({{ .col }}), 
+            sd = sd({{ .col }})
           ) %>%
-          mutate(
-            across(where(is.double), ~rnd(., {{ decimals }})),
+          dplyr::mutate(
+            dplyr::across(where(is.double), ~rnd(., {{ .decimals }})),
             value = paste0(mean, plus_minus, sd)
           ) %>%
-          select({{ .group_by }}, value) %>%
-          rename(!!default_name := value) %>% 
-          pivot_longer(cols = !{{ .group_by }}) %>% 
-          pivot_wider(names_from = {{ .group_by }}) %>% 
-          mutate(
+          dplyr::select({{ .group_by }}, value) %>%
+          dplyr::rename(!!default_name := value) %>% 
+          tidyr::pivot_longer(cols = !{{ .group_by }}) %>% 
+          tidyr::pivot_wider(names_from = {{ .group_by }}) %>% 
+          dplyr::mutate(
             `P-value` = t.test(
-              filter(df, {{ .group_by }} == min(group_values)) %>% 
-                pull({{ summary_var }}),
-              filter(df, {{ .group_by }} == max(group_values)) %>% 
-                pull({{ summary_var }})
+              dplyr::filter(df, {{ .group_by }} == min(group_values)) %>% 
+                dplyr::pull({{ .col }}),
+              dplyr::filter(df, {{ .group_by }} == max(group_values)) %>% 
+                dplyr::pull({{ .col }})
             )$p.value,
-            across(where(is.double), ~rnd(., 3)),
-            `P-value` = if_else(
+            dplyr::across(where(is.double), ~rnd(., 3)),
+            `P-value` = ifelse(
               `P-value` < 0.001, "<0.001", as.character(`P-value`)
             )
           ) %>% 
-          rename(Characteristic = name)
+          dplyr::rename(Characteristic = name)
       # Create summary for skewed variables (median(IQR) with Wilcoxon rank-sum
       # p-value) where the binary grouping variable is supplied
-      } else if (normally_distributed == FALSE) {
+      } else if (.normally_distributed == FALSE) {
         summary = df %>%
-          group_by({{ .group_by }}) %>%
-          drop_na({{ summary_var }}) %>% 
-          summarise(
-            median = median({{ summary_var }}), 
-            lower = quantile({{ summary_var }}, 0.25),
-            upper = quantile({{ summary_var }}, 0.75)
+          dplyr::group_by({{ .group_by }}) %>%
+          tidyr::drop_na({{ .col }}) %>% 
+          dplyr::summarise(
+            median = median({{ .col }}), 
+            lower = quantile({{ .col }}, 0.25),
+            upper = quantile({{ .col }}, 0.75)
           ) %>%
-          mutate(
-            across(where(is.double), ~rnd(., {{ decimals }})),
+          dplyr::mutate(
+            dplyr::across(where(is.double), ~rnd(., {{ .decimals }})),
             value = paste0(median, " (", lower, ", ", upper, ")")
           ) %>%
-          select({{ .group_by }}, value) %>%
-          rename(!!default_name := value) %>% 
-          pivot_longer(cols = !{{ .group_by }}) %>% 
-          pivot_wider(names_from = {{ .group_by }}) %>% 
-          mutate(
+          dplyr::select({{ .group_by }}, value) %>%
+          dplyr::rename(!!default_name := value) %>% 
+          tidyr::pivot_longer(cols = !{{ .group_by }}) %>% 
+          tidyr::pivot_wider(names_from = {{ .group_by }}) %>% 
+          dplyr::mutate(
             `P-value` = wilcox.test(
-              filter(df, {{ .group_by }} == min(group_values)) %>% 
-                pull({{ summary_var }}),
-              filter(df, {{ .group_by }} == max(group_values)) %>% 
-                pull({{ summary_var }})
+              dplyr::filter(df, {{ .group_by }} == min(group_values)) %>% 
+                dplyr::pull({{ .col }}),
+              dplyr::filter(df, {{ .group_by }} == max(group_values)) %>% 
+                dplyr::pull({{ .col }})
             )$p.value,
-            across(where(is.double), ~rnd(., 3)),
-            `P-value` = if_else(
+            dplyr::across(where(is.double), ~rnd(., 3)),
+            `P-value` = ifelse(
               `P-value` < 0.001, "<0.001", as.character(`P-value`)
             )
           ) %>% 
-          rename(Characteristic = name)
+          dplyr::rename(Characteristic = name)
       }
     } 
     return(summary)
@@ -190,23 +189,23 @@ summarise_continuous = function(df,
     # Loop function over selected `.cols` with the binary grouping 
     # variable not supplied
     names(selected) %>% 
-      map( 
-        ~generate_stats(
-          df, !!sym(.), , decimals, normally_distributed
+      purrr::map( 
+        ~ generate_stats(
+            df, !!sym(.), , .decimals, .normally_distributed
         )
       ) %>% 
-      bind_rows() %>% 
-      rename_with(str_to_sentence)
+      dplyr::bind_rows() %>% 
+      dplyr::rename_with(str_to_sentence)
   } else {
     # Loop function over selected `.cols` with the binary grouping 
     # variable supplied
     names(selected) %>% 
-      map( 
-        ~generate_stats(
-          df, !!sym(.), {{ .group_by }}, decimals, normally_distributed
+      purrr::map( 
+        ~ generate_stats(
+            df, !!sym(.), {{ .group_by }}, .decimals, .normally_distributed
         )
       ) %>% 
-      bind_rows() %>% 
-      rename_with(str_to_sentence)
+      dplyr::bind_rows() %>% 
+      dplyr::rename_with(str_to_sentence)
   }
 }
