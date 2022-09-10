@@ -8,17 +8,17 @@
 #*******************************************************************************
 
 summarise_categorical = function(df,
-                                 summary_vars,
+                                 .cols,
                                  .group_by,
                                  decimals = 1,
                                  include_missing = TRUE) {
   # Wrapper for `generate_stats()`, allowing for multiple categorical 
-  # `summary_vars` to be specified using a tidyselect interface
+  # `.cols` to be specified using a tidyselect interface
   # 
   # Arguments
   # ---------
   # df : tibble
-  # summary_vars : variable(s) to summarise, i.e. x or c(x, y, z)
+  # .cols : variable(s) to summarise, i.e. x or c(x, y, z)
   # .group_by : [OPTIONAL] variable to group by, MUST be a binary variable with
   #             categories `0` and `1`
   # decimals : integer value (number of decimal places to round numbers 
@@ -174,15 +174,15 @@ summarise_categorical = function(df,
     return(summary_clean)
   }
   
-  # Defuse `summary_vars` function argument
-  summary_vars = rlang::enquo(summary_vars)
+  # Defuse `.cols` function argument
+  .cols = rlang::enquo(.cols)
   
   # Evaluate defused R code and return vector of locations for the selected 
   # elements
-  selected = tidyselect::eval_select(summary_vars, df)
+  selected = tidyselect::eval_select(.cols, df)
   
   if (missing(.group_by)) {
-    # Loop function over selected `summary_vars` with the binary grouping 
+    # Loop function over selected `.cols` with the binary grouping 
     # variable not supplied
     names(selected) %>% 
       map( 
@@ -193,7 +193,7 @@ summarise_categorical = function(df,
       bind_rows() %>% 
       rename_with(str_to_sentence)
   } else {
-    # Loop function over selected `summary_vars` with the binary grouping 
+    # Loop function over selected `.cols` with the binary grouping 
     # variable supplied
     names(selected) %>% 
       map( 
