@@ -8,6 +8,31 @@
 #
 #*******************************************************************************
 
+fast_map <- function(.x, .f) {
+  #' Loop function that operates similarly to `purrr::map()` but is
+  #' faster
+  #'
+  #' Arguments
+  #' ---------
+  #' @param .x : vector
+  #' @param .f : function to apply to each element of the vector
+  #' 
+  #' Returns
+  #' -------
+  #' @return 
+  #' @export
+  #' 
+  #' @examples
+  
+  res <- list()
+  
+  for(i in seq_along(.x)) {
+    res[[i]] <- .f(.x[[i]])
+  }
+  
+  return(res)
+}
+
 rnd = function(x, decimals) {
   # Correctly round numbers (`round()` function in R works weirdly)
   # 

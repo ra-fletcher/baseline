@@ -33,45 +33,45 @@ The current version of baseline provides two functions which facilitate the crea
 ## Usage
 
 ``` r
-stroke_df %>%
+stroke %>%
   summarise_continuous(
-    age, 
-    .group_by = stroke, 
-    normally_distributed = TRUE
+    .cols = age, 
+    .group_by = stroke_desc, 
+    .normally_distributed = TRUE
   )
 #> # A tibble: 1 × 4
-#>   Characteristic `0`     `1`       `P-value`
-#>   <chr>          <chr>   <chr>     <chr>    
-#> 1 Age, years     42±22.3 67.7±12.7 <0.001 
+#>   Characteristic `Cases (n = 249)` `Controls (n = 4861)` `P-value`
+#>   <chr>          <chr>             <chr>                 <chr>    
+#> 1 age            67.7±12.7         42.0±22.3             <0.001
 
-stroke_df %>%
+stroke %>%
   summarise_continuous(
-    c(bmi, avg_glucose_level), 
-    .group_by = stroke, 
-    normally_distributed = FALSE,
+    .cols = c(bmi, avg_glucose_level),
+    .group_by = stroke_desc,
+    .normally_distributed = TRUE
   )
 #> # A tibble: 2 × 4
-#>   Characteristic    `0`                `1`                 `P-value`
-#>   <chr>             <chr>              <chr>               <chr>    
-#> 1 bmi               28 (23.4, 33.1)    29.7 (26.4, 33.7)   <0.001   
-#> 2 avg_glucose_level 91.5 (77.1, 112.8) 105.2 (79.8, 196.7) <0.001 
+#>   Characteristic     `Cases (n = 249)` `Controls (n = 4861)` `P-value`
+#>   <chr>              <chr>             <chr>                 <chr>    
+#> 1 bmi                30.5±6.3          28.8±7.9              <0.001   
+#> 2 avg_glucose_level  132.5±61.9        104.8±43.8            <0.001   
 
-stroke_df %>%
+stroke %>%
   summarise_categorical(
-    c(gender, smoking_status), 
-    stroke, 
-    include_missing = TRUE,
+    .cols = c(gender, smoking_status), 
+    .group_by = stroke_desc, 
+    .include_missing = TRUE,
   )
 #> # A tibble: 7 × 4
-#>   Characteristic     `0`            `1`           `P-value`
-#>   <chr>              <chr>          <chr>         <chr>    
-#> 1 "gender"           ""             ""            "0.56"   
-#> 2 "  Female"         "2853 (58.7%)" "141 (56.6%)" ""       
-#> 3 "  Male"           "2007 (41.3%)" "108 (43.4%)" ""       
-#> 4 "smoking_status"   ""             ""            "0.003"  
-#> 5 "  Never smoker"   "1802 (37.1%)" "90 (36.1%)"  ""       
-#> 6 "  Former smoker"  "815 (16.8%)"  "70 (28.1%)"  ""       
-#> 7 "  Current smoker" "747 (15.4%)"  "42 (16.9%)"  ""       
+#>   Characteristic     `Cases (n = 249)` `Controls (n = 4861)` `P-value`
+#>   <chr>              <chr>             <chr>                 <chr>    
+#> 1 "gender"           ""                ""                    "0.560"  
+#> 2 "  Female"         "141 (56.6%)"     "2853 (58.7%)"        ""       
+#> 3 "  Male"           "108 (43.4%)"     "2007 (41.3%)"        ""       
+#> 4 "smoking_status"   ""                ""                    "0.003"  
+#> 5 "  Never smoker"   "90 (36.1%)"      "1802 (37.1%)"        ""       
+#> 6 "  Former smoker"  "70 (28.1%)"      "815 (16.8%)"         ""       
+#> 7 "  Current smoker" "42 (16.9%)"      "747 (15.4%)"         ""         
 ```
 
 ## Folder structure
@@ -105,6 +105,6 @@ If you encounter a clear bug or have any questions/suggestions, please feel free
 
 **Rob Fletcher** - Associate Biostatistician / Research Associate | The George Institute for Global Health
 
-**Patrick Rockenschaub** - Senior Medical Statistician | Sensyne Health
+**Patrick Rockenschaub** - Research Fellow | Charité Lab for Artificial Intelligence in Medicine, Berlin
 
-**Tom Matcham** - Head of Data Science | Intechnica
+**Tom Matcham** - Head of Data Science | Goss

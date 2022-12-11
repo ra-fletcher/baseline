@@ -7,7 +7,7 @@
 #
 #*******************************************************************************
 
-summarise_continuous = function(df,
+summarise_continuous = function(.data,
                                 .cols,
                                 .group_by,
                                 .decimals = 1,
@@ -17,22 +17,21 @@ summarise_continuous = function(df,
   # 
   # Arguments
   # ---------
-  # df : tibble
+  # .data : tibble
   # .cols : variable(s) to summarise, i.e. x or c(x, y, z)
-  # .group_by : [OPTIONAL] variable to group by, MUST be a binary variable with
-  #             categories `0` and `1`
+  # .group_by : [OPTIONAL] variable to group by, MUST be a binary variable
   # .decimals : integer value (number of decimal places to round numbers 
-  #            displayed in the output), default is 1 decimal place
+  #             displayed in the output), default is 1 decimal place
   # .normally_distributed : boolean (whether `.cols` are normally 
-  #                        distributed [==TRUE] or skewed [==FALSE], decides 
-  #                        whether mean/SD with T-test or median/IQR with 
-  #                        Wilcoxon are returned), default is TRUE
+  #                         distributed [==TRUE] or skewed [==FALSE], decides 
+  #                         whether mean/SD with T-test or median/IQR with 
+  #                         Wilcoxon are returned), default is TRUE
   #
   # Returns
   # -------
   # tibble
 
-  generate_stats = function(df, 
+  generate_stats = function(.data, 
                             .col, 
                             .group_by, 
                             .decimals = 1,
@@ -40,11 +39,14 @@ summarise_continuous = function(df,
     # Generate summary statistics for one continuous variable for the purpose of
     # building a baseline characteristics table
 
-    # Load function to correctly round numbers
+    # Load necessary functions
     source(here::here("src", "utils.R"))
   
     # Unicode character for +/-
     plus_minus = bquote("\U00B1")
+    
+    # Define data name
+    df = .data
   
     # Define characteristic name
     default_name = df %>% dplyr::select({{ .col }}) %>% colnames()
@@ -83,7 +85,16 @@ summarise_continuous = function(df,
             sd = sd({{ .col }})
           ) %>%
           dplyr::mutate(
-            dplyr::across(where(is.double), ~rnd(., {{ .decimals }})),
+            dplyr::across(c(mean, sd), ~ as.character(rnd(., {{ .decimals }}))),
+            dplyr::across(
+              c(mean, sd), 
+              ~ dplyr::case_when(
+                  !stringr::str_detect(., "[.]") ~ paste0(
+                    ., ".", paste(rep("0", {{ .decimals }}), collapse = "")
+                  ),
+                TRUE ~ .
+              )
+            ),
             value = paste0(mean, plus_minus, sd)
           ) %>%
           dplyr::select(value) %>%
@@ -96,13 +107,24 @@ summarise_continuous = function(df,
         summary = df %>%
           tidyr::drop_na({{ .col }}) %>% 
           dplyr::summarise(
-            median = median({{ .col }}), 
-            lower = quantile({{ .col }}, 0.25),
-            upper = quantile({{ .col }}, 0.75)
+            med = median({{ .col }}), 
+            low = quantile({{ .col }}, 0.25),
+            hgh = quantile({{ .col }}, 0.75)
           ) %>%
           dplyr::mutate(
-            dplyr::across(where(is.double), ~rnd(., {{ .decimals }})),
-            value = paste0(median, " (", lower, ", ", upper, ")")
+            dplyr::across(
+              c(med, low, hgh), ~ as.character(rnd(., {{ .decimals }}))
+            ),
+            dplyr::across(
+              c(med, low, hgh), 
+              ~ dplyr::case_when(
+                  !stringr::str_detect(., "[.]") ~ paste0(
+                    ., ".", paste(rep("0", {{ .decimals }}), collapse = "")
+                  ),
+                TRUE ~ .
+              )
+            ),
+            value = paste0(med, " (", low, ", ", hgh, ")")
           ) %>%
           dplyr::select(value) %>%
           dplyr::rename(!!default_name := value) %>% 
@@ -121,7 +143,16 @@ summarise_continuous = function(df,
             sd = sd({{ .col }})
           ) %>%
           dplyr::mutate(
-            dplyr::across(where(is.double), ~rnd(., {{ .decimals }})),
+            dplyr::across(c(mean, sd), ~ as.character(rnd(., {{ .decimals }}))),
+            dplyr::across(
+              c(mean, sd), 
+              ~ dplyr::case_when(
+                  !stringr::str_detect(., "[.]") ~ paste0(
+                    ., ".", paste(rep("0", {{ .decimals }}), collapse = "")
+                  ),
+                TRUE ~ .
+              )
+            ),
             value = paste0(mean, plus_minus, sd)
           ) %>%
           dplyr::select({{ .group_by }}, value) %>%
@@ -148,13 +179,24 @@ summarise_continuous = function(df,
           dplyr::group_by({{ .group_by }}) %>%
           tidyr::drop_na({{ .col }}) %>% 
           dplyr::summarise(
-            median = median({{ .col }}), 
-            lower = quantile({{ .col }}, 0.25),
-            upper = quantile({{ .col }}, 0.75)
+            med = median({{ .col }}), 
+            low = quantile({{ .col }}, 0.25),
+            hgh = quantile({{ .col }}, 0.75)
           ) %>%
           dplyr::mutate(
-            dplyr::across(where(is.double), ~rnd(., {{ .decimals }})),
-            value = paste0(median, " (", lower, ", ", upper, ")")
+            dplyr::across(
+              c(med, low, hgh), ~ as.character(rnd(., {{ .decimals }}))
+            ),
+            dplyr::across(
+              c(med, low, hgh), 
+              ~ dplyr::case_when(
+                  !stringr::str_detect(., "[.]") ~ paste0(
+                    ., ".", paste(rep("0", {{ .decimals }}), collapse = "")
+                  ),
+                TRUE ~ .
+              )
+            ),
+            value = paste0(med, " (", low, ", ", hgh, ")")
           ) %>%
           dplyr::select({{ .group_by }}, value) %>%
           dplyr::rename(!!default_name := value) %>% 
@@ -167,7 +209,7 @@ summarise_continuous = function(df,
               dplyr::filter(df, {{ .group_by }} == max(group_values)) %>% 
                 dplyr::pull({{ .col }})
             )$p.value,
-            dplyr::across(where(is.double), ~rnd(., 3)),
+            dplyr::across(where(is.double), ~ rnd(., 3)),
             `P-value` = ifelse(
               `P-value` < 0.001, "<0.001", as.character(`P-value`)
             )
@@ -183,7 +225,7 @@ summarise_continuous = function(df,
   
   # Evaluate defused R code and return vector of locations for the selected 
   # elements
-  selected = tidyselect::eval_select(.cols, df)
+  selected = tidyselect::eval_select(.cols, .data)
   
   if (missing(.group_by)) {
     # Loop function over selected `.cols` with the binary grouping 
@@ -191,21 +233,21 @@ summarise_continuous = function(df,
     names(selected) %>% 
       purrr::map( 
         ~ generate_stats(
-            df, !!sym(.), , .decimals, .normally_distributed
+            .data, !!sym(.), , .decimals, .normally_distributed
         )
       ) %>% 
       dplyr::bind_rows() %>% 
-      dplyr::rename_with(str_to_sentence)
+      dplyr::rename_with(stringr::str_to_sentence)
   } else {
     # Loop function over selected `.cols` with the binary grouping 
     # variable supplied
     names(selected) %>% 
       purrr::map( 
         ~ generate_stats(
-            df, !!sym(.), {{ .group_by }}, .decimals, .normally_distributed
+            .data, !!sym(.), {{ .group_by }}, .decimals, .normally_distributed
         )
       ) %>% 
       dplyr::bind_rows() %>% 
-      dplyr::rename_with(str_to_sentence)
+      dplyr::rename_with(stringr::str_to_sentence)
   }
 }

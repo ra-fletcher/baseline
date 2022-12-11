@@ -15,7 +15,7 @@ library(tidyverse)
 
 # Load data ---------------------------------------------------------------
 
-stroke_df = read_rds(here::here("data", "stroke_data.rds"))
+stroke <- read_rds(here::here("data", "stroke_data.rds"))
 
 
 # Source functions --------------------------------------------------------
@@ -24,23 +24,11 @@ source(here::here("src", "summarise_continuous.R"))
 source(here::here("src", "summarise_categorical.R"))
 
 
-# Define groups for the table ---------------------------------------------
-
-group_sizes = table(stroke_df$stroke_desc) %>%
-  as.list()
-
-tbl_col_names = 
-  list(
-    cases = paste0("Cases (n=", group_sizes$cases, ")"),
-    controls = paste0("Controls (n=", group_sizes$controls, ")"),
-    p_value = "P-value"
-  )
-
-
 # Summarise continuous variables ---------------------------------------------
 
-baseline_continuous = stroke_df %>% 
+cont <- 
   summarise_continuous(
+    .data = stroke,
     .cols = c(age, bmi, avg_glucose_level),
     .group_by = stroke_desc,
     .normally_distributed = TRUE
@@ -49,8 +37,9 @@ baseline_continuous = stroke_df %>%
 
 # Summarise categorical variables -----------------------------------------
 
-baseline_categorical = stroke_df %>% 
+cat <- 
   summarise_categorical(
+    .data = stroke,
     .cols = c(gender, smoking_status, hypertension, work_type), 
     .group_by = stroke_desc,
     .include_missing = TRUE
@@ -59,17 +48,8 @@ baseline_categorical = stroke_df %>%
 
 # Concatenate to produce baseline table -----------------------------------
 
-baseline_tbl =
-  bind_rows(
-    baseline_continuous, 
-    baseline_categorical, 
-  ) %>%
-  select(
-    Characteristic,
-    !!tbl_col_names$cases := `1`,
-    !!tbl_col_names$controls := `0`,
-    `P-value`
-  ) %>% 
+tbl <- 
+  bind_rows(cont, cat) %>%
   mutate(
     Characteristic = case_when(
       str_detect(Characteristic, "^age") ~ "Age, years",
